@@ -197,7 +197,6 @@ const styles = StyleSheet.create({
     pageIndicator: {
       display: "flex",
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 20,

@@ -4,7 +4,7 @@
 
 <p><strong>Wireframe:</strong></p>
   <p align="center">
-    <img src="assets/Wireframe.jpg" alt="wireframe">
+    <img src="assets/Wireframe.png" alt="wireframe">
   </p>
   <p><strong>Little Lemon APP:</strong>
 </p>
