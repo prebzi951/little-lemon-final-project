@@ -1,48 +1,76 @@
 import * as SQLite from 'expo-sqlite';
 
-const db = SQLite.openDatabase('little_lemon');
+const db = SQLite.openDatabaseSync('little_lemon');
 
 export async function createTable() {
-    return new Promise((resolve, reject) => {
-        db.transaction(
-            (tx) => {
-                tx.executeSql(
-                  'create table if not exists menuitems (id integer primary key not null, name text, price text, description text, image text, category text);'
-                );
-            },
-            reject,
-            resolve
-        );
-    });
+    try {
+        await db.execAsync(`
+            CREATE TABLE IF NOT EXISTS menuitems (
+                id INTEGER PRIMARY KEY NOT NULL, 
+                name TEXT, 
+                price TEXT, 
+                description TEXT, 
+                image TEXT, 
+                category TEXT
+            );
+        `);
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(error);
+    }
 }
 
 export async function getMenuItems() {
-    return new Promise((resolve) => {
-        db.transaction((tx) => {
-            tx.executeSql('select * from menuitems', [], (_, { rows }) => {
-              resolve(rows._array);
-            });
-        });
-    });
+    try {
+        return  await db.getAllAsync('SELECT * FROM menuitems');
+    } catch (error) {
+        throw error;
+    }
 }
 
-export function saveMenuItems(menuItems) {
-    db.transaction((tx) => {
-        tx.executeSql(
-            `insert into menuitems (id, name, price, description, image, category) values ${menuItems.map((item) =>
-              `("${item.id}", "${item.name}", "${item.price}", "${item.description}", "${item.image}", "${item.category}")`)
-            .join(', ')}`
-        );
-    });
+export async function saveMenuItems(menuItems) {
+    if (!Array.isArray(menuItems) || menuItems.length === 0) {
+        throw new Error('Invalid menu items data');
+    }
+
+    try {
+        await db.withTransactionAsync(async () => {
+            const statement = await db.prepareAsync(
+                'INSERT INTO menuitems (id, name, price, description, image, category) VALUES (?, ?, ?, ?, ?, ?)'
+            );
+
+            for (const item of menuItems) {
+                await statement.executeAsync([
+                    item.id,
+                    item.name,
+                    item.price,
+                    item.description,
+                    item.image,
+                    item.category
+                ]);
+            }
+
+            await statement.finalizeAsync();
+        });
+    } catch (error) {
+        throw error;
+    }
 }
 
 export async function filterByQueryAndCategories(query, activeCategories) {
-    return new Promise((resolve, reject) => {
-        db.transaction((tx) => {
-            tx.executeSql(`select * from menuitems where name like ? and category in ('${activeCategories.join("','")}')`, [`%${query}%`], (_, { rows }) => {
-                resolve(rows._array);
-            });
-        },
-        reject);
-    });
+    if (!activeCategories || activeCategories.length === 0) {
+        return [];
+    }
+
+    try {
+        const placeholders = activeCategories.map(() => '?').join(', ');
+        const params = [`%${query}%`, ...activeCategories];
+
+        return  await db.getAllAsync(
+            `SELECT * FROM menuitems WHERE name LIKE ? AND category IN (${placeholders})`,
+            params
+        );
+    } catch (error) {
+        throw error;
+    }
 }

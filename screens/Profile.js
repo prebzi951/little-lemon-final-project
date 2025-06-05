@@ -59,6 +59,7 @@ const Profile = () => {
     }
 
     const getIsFormValid = () => {
+        console.log()
         return (
             !validateName(profile.firstName) &&
             !validateName(profile.lastName) &&

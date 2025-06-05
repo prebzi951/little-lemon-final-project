@@ -84,7 +84,7 @@ const Home = ({navigation}) => {
           let items = await getMenuItems();
           if (items.length === 0) {
             items = await fetchData();
-            saveMenuItems(items);
+            await saveMenuItems(items);
           }
 
           setData(getSectionListData(items));
